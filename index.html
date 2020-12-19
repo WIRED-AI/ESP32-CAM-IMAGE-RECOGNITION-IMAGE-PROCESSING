@@ -1,363 +1,78 @@
 <!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>ESP32 OV3660</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
 
-        <style>
-            body {
-                font-family: Arial,Helvetica,sans-serif;
-                background: #181818;
-                color: #EFEFEF;
-                font-size: 16px
-            }
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ESP32 Image Recognition</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
 
-            h2 {
-                font-size: 18px
-            }
+<style>
+    
+    .card img{
+        height: 250px;
+        width: 100%;
+    }
+    .streaming{
+        width: 100%;
+        height: 250px;
+    }
+    
+    </style>
+</head>
 
-            section.main {
-                display: flex
-            }
+<body>
 
-            #menu,section.main {
-                flex-direction: column
-            }
 
-            #menu {
-                display: none;
-                flex-wrap: nowrap;
-                min-width: 340px;
-                background: #363636;
-                padding: 30px;
-                border-radius: 30px;
-                margin-left: 8px;
-                margin-right: 20px;
-                
-            }
+    <div class="container-fluid p-3">
 
-            #content {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: stretch
-            }
+        <h1 class="text-center text-warning mb-4">Esp32 Cam Image Classification</h1>
 
-            figure {
-                padding: 0px;
-                margin: 0;
-                -webkit-margin-before: 0;
-                margin-block-start: 0;
-                -webkit-margin-after: 0;
-                margin-block-end: 0;
-                -webkit-margin-start: 0;
-                margin-inline-start: 0;
-                -webkit-margin-end: 0;
-                margin-inline-end: 0
-            }
+        <div class="row">
+            <div class="col-md-3 col-lg-3 col-sm-12 text-center" style="height: 100%;">
+                <div style="border-top:1px dashed grey; border-left:1px dashed grey;border-bottom: 1px dashed grey;border-right: 1px dashed grey;margin-right:1px dashed grey;" class="p-2 mr-0">
+                    <h5 class="text-center text-secondary">ESP32 CAM Controls</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <button class="btn btn-primary btn-block" id="toggle-stream">Start Stream</button>
+                    </div>
+                    <hr>
+                    <h5 class="text-center text-secondary">Classify Image using URL</h5>
+                    <div class="form-group">
+                        <h5 class="text-center text-secondary"></h5>
+                        <textarea class="form-control mb-3" style="resize: none;" placeholder="Enter Image URL" id="imgurl" name="imgurl"></textarea>
+                        <button class="btn btn-success btn-block" id="get_image" onclick="loadimage($('#imgurl').val())">
+                            Upload URL
+                        </button>
+                    </div>
+                </div>
 
-            figure img {
-                display: block;
-                width: 100%;
-                height: auto;
-                border-radius: 4px;
-                margin-top: 8px;
-            }
 
-            @media (min-width: 800px) and (orientation:landscape) {
-                #content {
-                    display:flex;
-                    flex-wrap: nowrap;
-                    align-items: stretch
-                }
 
-                figure img {
-                    display: block;
-                    max-width: 100%;
-                    max-height: calc(100vh - 40px);
-                    width: auto;
-                    height: auto
-                }
+            </div>
+            <div class="col-md-9 col-lg-9 col-sm-12 overflow-auto" style="height: 80vh;">
+                <div class=" p-3" style="border:1px dashed grey;">
 
-                figure {
-                    padding: 0 0 0 0px;
-                    margin: 0;
-                    -webkit-margin-before: 0;
-                    margin-block-start: 0;
-                    -webkit-margin-after: 0;
-                    margin-block-end: 0;
-                    -webkit-margin-start: 0;
-                    margin-inline-start: 0;
-                    -webkit-margin-end: 0;
-                    margin-inline-end: 0
-                }
-            }
+                    <div class="row mt-4 p-4 " id="im">
 
-            section#buttons {
-                display: flex;
-                flex-wrap: nowrap;
-                justify-content: space-between
-            }
+                        <div class="">
+                           
+                           <div class="card  mr-2 mb-2" style="width:18rem;">
+                               <img id="stream" src="" class="card-img-top streaming">
+                               <div class="card-body text-center hide-stream">
+                                   <button class="btn btn-info btn-block" id="get-still">Get Still</button>
+                               </div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            #nav-toggle {
-                cursor: pointer;
-                display: block
-            }
 
-            #nav-toggle-cb {
-                outline: 0;
-                opacity: 0;
-                width: 0;
-                height: 0
-            }
 
-            #nav-toggle-cb:checked+#menu {
-                display: flex
-            }
-
-            .input-group {
-                display: flex;
-                flex-wrap: nowrap;
-                line-height: 22px;
-                margin: 5px 0
-            }
-
-            .input-group>label {
-                display: inline-block;
-                padding-right: 10px;
-                min-width: 47%
-            }
-
-            .input-group input,.input-group select {
-                flex-grow: 1
-            }
-
-            .range-max,.range-min {
-                display: inline-block;
-                padding: 0 5px
-            }
-
-            button {
-                display: block;
-                margin: 5px;
-                padding: 0 12px;
-                border: 0;
-                line-height: 28px;
-                cursor: pointer;
-                color: #fff;
-                background: #ff3034;
-                border-radius: 5px;
-                font-size: 16px;
-                outline: 0
-            }
-
-            button:hover {
-                background: #ff494d
-            }
-
-            button:active {
-                background: #f21c21
-            }
-
-            button.disabled {
-                cursor: default;
-                background: #a0a0a0
-            }
-
-            input[type=range] {
-                -webkit-appearance: none;
-                width: 100%;
-                height: 22px;
-                background: #363636;
-                cursor: pointer;
-                margin: 0
-            }
-
-            input[type=range]:focus {
-                outline: 0
-            }
-
-            input[type=range]::-webkit-slider-runnable-track {
-                width: 100%;
-                height: 2px;
-                cursor: pointer;
-                background: #EFEFEF;
-                border-radius: 0;
-                border: 0 solid #EFEFEF
-            }
-
-            input[type=range]::-webkit-slider-thumb {
-                border: 1px solid rgba(0,0,30,0);
-                height: 22px;
-                width: 22px;
-                border-radius: 50px;
-                background: #ff3034;
-                cursor: pointer;
-                -webkit-appearance: none;
-                margin-top: -11.5px
-            }
-
-            input[type=range]:focus::-webkit-slider-runnable-track {
-                background: #EFEFEF
-            }
-
-            input[type=range]::-moz-range-track {
-                width: 100%;
-                height: 2px;
-                cursor: pointer;
-                background: #EFEFEF;
-                border-radius: 0;
-                border: 0 solid #EFEFEF
-            }
-
-            input[type=range]::-moz-range-thumb {
-                border: 1px solid rgba(0,0,30,0);
-                height: 22px;
-                width: 22px;
-                border-radius: 50px;
-                background: #ff3034;
-                cursor: pointer
-            }
-
-            input[type=range]::-ms-track {
-                width: 100%;
-                height: 2px;
-                cursor: pointer;
-                background: 0 0;
-                border-color: transparent;
-                color: transparent
-            }
-
-            input[type=range]::-ms-fill-lower {
-                background: #EFEFEF;
-                border: 0 solid #EFEFEF;
-                border-radius: 0
-            }
-
-            input[type=range]::-ms-fill-upper {
-                background: #EFEFEF;
-                border: 0 solid #EFEFEF;
-                border-radius: 0
-            }
-
-            input[type=range]::-ms-thumb {
-                border: 1px solid rgba(0,0,30,0);
-                height: 22px;
-                width: 22px;
-                border-radius: 50px;
-                background: #ff3034;
-                cursor: pointer;
-                height: 2px
-            }
-
-            input[type=range]:focus::-ms-fill-lower {
-                background: #EFEFEF
-            }
-
-            input[type=range]:focus::-ms-fill-upper {
-                background: #363636
-            }
-
-            .switch {
-                display: block;
-                position: relative;
-                line-height: 22px;
-                font-size: 16px;
-                height: 22px
-            }
-
-            .switch input {
-                outline: 0;
-                opacity: 0;
-                width: 0;
-                height: 0
-            }
-
-            .slider {
-                width: 50px;
-                height: 22px;
-                border-radius: 22px;
-                cursor: pointer;
-                background-color: grey
-            }
-
-            .slider,.slider:before {
-                display: inline-block;
-                transition: .4s
-            }
-
-            .slider:before {
-                position: relative;
-                content: "";
-                border-radius: 50%;
-                height: 16px;
-                width: 16px;
-                left: 4px;
-                top: 3px;
-                background-color: #fff
-            }
-
-            input:checked+.slider {
-                background-color: #ff3034
-            }
-
-            input:checked+.slider:before {
-                -webkit-transform: translateX(26px);
-                transform: translateX(26px)
-            }
-
-            select {
-                border: 1px solid #363636;
-                font-size: 14px;
-                height: 22px;
-                outline: 0;
-                border-radius: 5px
-            }
-
-            .image-container {
-                position: relative;
-                min-width: 160px
-            }
-
-            .close {
-                position: absolute;
-                right: 5px;
-                top: 5px;
-                background: #ff3034;
-                width: 16px;
-                height: 16px;
-                border-radius: 100px;
-                color: #fff;
-                text-align: center;
-                line-height: 18px;
-                cursor: pointer
-            }
-
-            .hidden {
-                display: none
-            }
-
-            input[type=text] {
-                border: 1px solid #363636;
-                font-size: 14px;
-                height: 20px;
-                margin: 1px;
-                outline: 0;
-                border-radius: 5px
-            }
-
-            .inline-button {
-                line-height: 20px;
-                margin: 2px;
-                padding: 1px 4px 2px 4px;
-            }
-
-        </style>
- 
-    </head>
-    <body>
-        <section class="main">
+        </div>
+        <section class="main d-none">
             <div id="logo">
                 <label for="nav-toggle-cb" id="nav-toggle">&#9776;&nbsp;&nbsp;Toggle OV3660 settings</label>
             </div>
@@ -365,16 +80,16 @@
                 <div id="sidebar">
                     <input type="checkbox" id="nav-toggle-cb" checked="checked">
                     <nav id="menu">
-                        <div class="input-group" id="framesize-group">
+                        <div class="input-group d-none" id="framesize-group">
                             <label for="framesize" class="col-form-label">Resolution</label>
                             <select id="framesize" class="default-action form-control">
                                 <option value="11">QXGA(2048x1564)</option>
                                 <option value="10">UXGA(1600x1200)</option>
                                 <option value="9">SXGA(1280x1024)</option>
-                                <option value="8">XGA(1024x768)</option>
+                                <option value="8" selected="selected">XGA(1024x768)</option>
                                 <option value="7">SVGA(800x600)</option>
                                 <option value="6">VGA(640x480)</option>
-                                <option value="5" selected="selected">CIF(400x296)</option>
+                                <option value="5">CIF(400x296)</option>
                                 <option value="4">QVGA(320x240)</option>
                                 <option value="3">HQVGA(240x176)</option>
                                 <option value="0">QQVGA(160x120)</option>
@@ -504,74 +219,74 @@
                             <input type="range" id="agc_gain" min="0" max="64" value="5" class="default-action">
                             <div class="range-max">64x</div>
                         </div>
-                        <div class="input-group d-none" id="raw_gma-group">
+                        <div class="input-group " id="raw_gma-group">
                             <label for="raw_gma">GMA Enable</label>
                             <div class="switch">
                                 <input id="raw_gma" type="checkbox" class="default-action" checked="checked">
                                 <label class="slider" for="raw_gma"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="lenc-group">
+                        <div class="input-group " id="lenc-group">
                             <label for="lenc">Lens Correction</label>
                             <div class="switch">
                                 <input id="lenc" type="checkbox" class="default-action" checked="checked">
                                 <label class="slider" for="lenc"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="hmirror-group">
+                        <div class="input-group " id="hmirror-group">
                             <label for="hmirror">H-Mirror</label>
                             <div class="switch">
                                 <input id="hmirror" type="checkbox" class="default-action" checked="checked">
                                 <label class="slider" for="hmirror"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="vflip-group">
+                        <div class="input-group " id="vflip-group">
                             <label for="vflip">V-Flip</label>
                             <div class="switch">
                                 <input id="vflip" type="checkbox" class="default-action" checked="checked">
                                 <label class="slider" for="vflip"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="bpc-group">
+                        <div class="input-group " id="bpc-group">
                             <label for="bpc">BPC</label>
                             <div class="switch">
                                 <input id="bpc" type="checkbox" class="default-action">
                                 <label class="slider" for="bpc"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="wpc-group">
+                        <div class="input-group " id="wpc-group">
                             <label for="wpc">WPC</label>
                             <div class="switch">
                                 <input id="wpc" type="checkbox" class="default-action" checked="checked">
                                 <label class="slider" for="wpc"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="colorbar-group">
+                        <div class="input-group " id="colorbar-group">
                             <label for="colorbar">Color Bar</label>
                             <div class="switch">
                                 <input id="colorbar" type="checkbox" class="default-action">
                                 <label class="slider" for="colorbar"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="face_detect-group">
+                        <div class="input-group " id="face_detect-group">
                             <label for="face_detect">Face Detection</label>
                             <div class="switch">
                                 <input id="face_detect" type="checkbox" class="default-action">
                                 <label class="slider" for="face_detect"></label>
                             </div>
                         </div>
-                        <div class="input-group d-none" id="face_recognize-group">
+                        <div class="input-group " id="face_recognize-group">
                             <label for="face_recognize">Face Recognition</label>
                             <div class="switch">
                                 <input id="face_recognize" type="checkbox" class="default-action">
                                 <label class="slider" for="face_recognize"></label>
                             </div>
                         </div>
-                        
+
                         <section id="buttons" class="mt-4">
-                            <button id="get-still" class="btn btn-primary rounded-pill">Get Still</button>
-                            <button id="toggle-stream" class="btn btn-success rounded-pill">Start Stream</button>
-                            <button id="face_enroll" class="disabled d-none" disabled="disabled">Enroll Face</button>
+                            <button  class="btn btn-primary rounded-pill">Get Still</button>
+                            <button  class="btn btn-success rounded-pill">Start Stream</button>
+                            <button id="face_enroll" class="disabled btn btn-info rounded-pill " disabled="disabled">Enroll Face</button>
                         </section>
                     </nav>
                 </div>
@@ -583,210 +298,311 @@
                 </figure>
             </div>
         </section>
+
+        <div class="container d-none">
+            <section class="row justify-content-center">
+                <div class="col-md-6">
+
+
+                    <input type="text" class="form-control mb-2" placeholder="Enter url here...">
+
+                    <br>
+
+
+                    <button type="button" class="btn btn-primary mb-2" >Upload</button>
+
+                    <div class="row mt-4 p-4" id="im">
+
+
+
+
+
+
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+</div>
         
-        
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"> </script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"> </script>
-        
-        
+  
+
         <script>
-document.addEventListener('DOMContentLoaded', function (event) {
-  var baseHost = document.location.origin
-  var streamUrl = baseHost + ':81'
-  const hide = el => {
-    el.classList.add('hidden')
-  }
-  const show = el => {
-    el.classList.remove('hidden')
-  }
-const disable = el => {
-    el.classList.add('disabled')
-    el.disabled = true
-  }
-  const enable = el => {
-    el.classList.remove('disabled')
-    el.disabled = false
-  }
-const updateValue = (el, value, updateRemote) => {
-    updateRemote = updateRemote == null ? true : updateRemote
-    let initialValue
-    if (el.type === 'checkbox') {
-      initialValue = el.checked
-      value = !!value
-      el.checked = value
-    } else {
-      initialValue = el.value
-      el.value = value
-    }
-    if (updateRemote && initialValue !== value) {
-      updateConfig(el);
-    } else if(!updateRemote){
-      if(el.id === "aec"){
-        value ? hide(exposure) : show(exposure)
-      } else if(el.id === "agc"){
-        if (value) {
-          hide(agcGain)
-        } else {
-          show(agcGain)
-        }
-      } else if(el.id === "awb_gain"){
-        value ? show(wb) : hide(wb)
-      } else if(el.id === "face_recognize"){
-        value ? enable(enrollButton) : disable(enrollButton)
-      }
-    }
-  }
-  function updateConfig (el) {
-    let value
-    switch (el.type) {
-      case 'checkbox':
-        value = el.checked ? 1 : 0
-        break
-      case 'range':
-      case 'select-one':
-        value = el.value
-        break
-      case 'button':
-      case 'submit':
-        value = '1'
-        break
-      default:
-        return
-    }
-    const query = `${baseHost}/control?var=${el.id}&val=${value}`
-    fetch(query)
-      .then(response => {
-        console.log(`request to ${query} finished, status: ${response.status}`)
-      })
-  }
-  document
-    .querySelectorAll('.close')
-    .forEach(el => {
-      el.onclick = () => {
-        hide(el.parentNode)
-      }
-    })
-  fetch(`${baseHost}/status`)
-    .then(function (response) {
-      return response.json()
-    })
-    .then(function (state) {
-      document
-        .querySelectorAll('.default-action')
-        .forEach(el => {
-            updateValue(el, state[el.id], false)
-        })
-    })
+            document.addEventListener('DOMContentLoaded', function(event) {
+                var baseHost = document.location.origin
+                var streamUrl = baseHost + ':81'
+                const hide = el => {
+                    el.classList.add('hidden')
+                }
+                const show = el => {
+                    el.classList.remove('hidden')
+                }
+                const disable = el => {
+                    el.classList.add('disabled')
+                    el.disabled = true
+                }
+                const enable = el => {
+                    el.classList.remove('disabled')
+                    el.disabled = false
+                }
+                const updateValue = (el, value, updateRemote) => {
+                    updateRemote = updateRemote == null ? true : updateRemote
+                    let initialValue
+                    if (el.type === 'checkbox') {
+                        initialValue = el.checked
+                        value = !!value
+                        el.checked = value
+                    } else {
+                        initialValue = el.value
+                        el.value = value
+                    }
+                    if (updateRemote && initialValue !== value) {
+                        updateConfig(el);
+                    } else if (!updateRemote) {
+                        if (el.id === "aec") {
+                            value ? hide(exposure) : show(exposure)
+                        } else if (el.id === "agc") {
+                            if (value) {
+                                hide(agcGain)
+                            } else {
+                                show(agcGain)
+                            }
+                        } else if (el.id === "awb_gain") {
+                            value ? show(wb) : hide(wb)
+                        } else if (el.id === "face_recognize") {
+                            value ? enable(enrollButton) : disable(enrollButton)
+                        }
+                    }
+                }
 
-  const view = document.getElementById('stream')
-  const viewContainer = document.getElementById('stream-container')
-  const stillButton = document.getElementById('get-still')
-  const streamButton = document.getElementById('toggle-stream')
-  const enrollButton = document.getElementById('face_enroll')
-  const closeButton = document.getElementById('close-stream')
+                function updateConfig(el) {
+                    let value
+                    switch (el.type) {
+                        case 'checkbox':
+                            value = el.checked ? 1 : 0
+                            break
+                        case 'range':
+                        case 'select-one':
+                            value = el.value
+                            break
+                        case 'button':
+                        case 'submit':
+                            value = '1'
+                            break
+                        default:
+                            return
+                    }
+                    const query = `${baseHost}/control?var=${el.id}&val=${value}`
+                    fetch(query)
+                        .then(response => {
+                            console.log(`request to ${query} finished, status: ${response.status}`)
+                        })
+                }
+                document
+                    .querySelectorAll('.close')
+                    .forEach(el => {
+                        el.onclick = () => {
+                            hide(el.parentNode)
+                        }
+                    })
+                fetch(`${baseHost}/status`)
+                    .then(function(response) {
+                        return response.json()
+                    })
+                    .then(function(state) {
+                        document
+                            .querySelectorAll('.default-action')
+                            .forEach(el => {
+                                updateValue(el, state[el.id], false)
+                            })
+                    })
 
-  const stopStream = () => {
-    window.stop();
-    streamButton.innerHTML = 'Start Stream'
-  }
+                const view = document.getElementById('stream')
+                const viewContainer = document.getElementById('stream-container')
+                const stillButton = document.getElementById('get-still')
+                const streamButton = document.getElementById('toggle-stream')
+                const enrollButton = document.getElementById('face_enroll')
+                const closeButton = document.getElementById('close-stream')
 
-  const startStream = () => {
-    view.src = `${streamUrl}/stream`
-    show(viewContainer)
-    streamButton.innerHTML = 'Stop Stream'
-  }
+                const stopStream = () => {
+                    window.stop();
+                    streamButton.innerHTML = 'Start Stream';
+                    $('.hide-stream').hide();
+                }
 
-  stillButton.onclick = () => {
-    stopStream()
-    view.src = `${baseHost}/capture?_cb=${Date.now()}`
-    show(viewContainer)
-  }
+                const startStream = () => {
+                    view.src = `${streamUrl}/stream`
+                    show(viewContainer)
+                    $('.hide-stream').show();
+                    streamButton.innerHTML = 'Stop Stream'
+                }
 
-  closeButton.onclick = () => {
-    stopStream()
-    hide(viewContainer)
-  }
+                stillButton.onclick = () => {
+                    //stopStream()
+                    //view.src = `${baseHost}/capture?_cb=${Date.now()}`;
+                    loadimage(`${baseHost}/capture?_cb=${Date.now()}`);
+                    show(viewContainer)
+                }
 
-  streamButton.onclick = () => {
-    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
-    if (streamEnabled) {
-      stopStream()
-    } else {
-      startStream()
-    }
-  }
+                closeButton.onclick = () => {
+                    stopStream()
+                    hide(viewContainer)
+                }
 
-  enrollButton.onclick = () => {
-    updateConfig(enrollButton)
-  }
-document
-    .querySelectorAll('.default-action')
-    .forEach(el => {
-      el.onchange = () => updateConfig(el)
-    })
-const agc = document.getElementById('agc')
-  const agcGain = document.getElementById('agc_gain-group')
-  agc.onchange = () => {
-    updateConfig(agc)
-    if (agc.checked) {
-      hide(agcGain)
-    } else {
-      show(agcGain)
-    }
-  }
-const aec = document.getElementById('aec')
-  const exposure = document.getElementById('aec_value-group')
-  aec.onchange = () => {
-    updateConfig(aec)
-    aec.checked ? hide(exposure) : show(exposure)
-  }
-  const awb = document.getElementById('awb_gain')
-  const wb = document.getElementById('wb_mode-group')
-  awb.onchange = () => {
-    updateConfig(awb)
-    awb.checked ? show(wb) : hide(wb)
-  }
-  const detect = document.getElementById('face_detect')
-  const recognize = document.getElementById('face_recognize')
-  const framesize = document.getElementById('framesize')
-  framesize.onchange = () => {
-    updateConfig(framesize)
-    if (framesize.value > 5) {
-      updateValue(detect, false)
-      updateValue(recognize, false)
-    }
-  }
-  detect.onchange = () => {
-    if (framesize.value > 5) {
-      alert("Please select CIF or lower resolution before enabling this feature!");
-      updateValue(detect, false)
-      return;
-    }
-    updateConfig(detect)
-    if (!detect.checked) {
-      disable(enrollButton)
-      updateValue(recognize, false)
-    }
-  }
-  recognize.onchange = () => {
-    if (framesize.value > 5) {
-      alert("Please select CIF or lower resolution before enabling this feature!");
-      updateValue(recognize, false)
-      return;
-    }
-    updateConfig(recognize)
-    if (recognize.checked) {
-      enable(enrollButton)
-      updateValue(detect, true)
-    } else {
-      disable(enrollButton)
-    }
-  }
-})
+                streamButton.onclick = () => {
+                    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+                    if (streamEnabled) {
+                        stopStream()
+                    } else {
+                        startStream()
+                    }
+                }
+
+                enrollButton.onclick = () => {
+                    updateConfig(enrollButton)
+                }
+                document
+                    .querySelectorAll('.default-action')
+                    .forEach(el => {
+                        el.onchange = () => updateConfig(el)
+                    })
+                const agc = document.getElementById('agc')
+                const agcGain = document.getElementById('agc_gain-group')
+                agc.onchange = () => {
+                    updateConfig(agc)
+                    if (agc.checked) {
+                        hide(agcGain)
+                    } else {
+                        show(agcGain)
+                    }
+                }
+                const aec = document.getElementById('aec')
+                const exposure = document.getElementById('aec_value-group')
+                aec.onchange = () => {
+                    updateConfig(aec)
+                    aec.checked ? hide(exposure) : show(exposure)
+                }
+                const awb = document.getElementById('awb_gain')
+                const wb = document.getElementById('wb_mode-group')
+                awb.onchange = () => {
+                    updateConfig(awb)
+                    awb.checked ? show(wb) : hide(wb)
+                }
+                const detect = document.getElementById('face_detect')
+                const recognize = document.getElementById('face_recognize')
+                const framesize = document.getElementById('framesize')
+                framesize.onchange = () => {
+                    updateConfig(framesize)
+                    if (framesize.value > 5) {
+                        updateValue(detect, false)
+                        updateValue(recognize, false)
+                    }
+                }
+                detect.onchange = () => {
+                    if (framesize.value > 5) {
+                        alert("Please select CIF or lower resolution before enabling this feature!");
+                        updateValue(detect, false)
+                        return;
+                    }
+                    updateConfig(detect)
+                    if (!detect.checked) {
+                        disable(enrollButton)
+                        updateValue(recognize, false)
+                    }
+                }
+                recognize.onchange = () => {
+                    if (framesize.value > 5) {
+                        alert("Please select CIF or lower resolution before enabling this feature!");
+                        updateValue(recognize, false)
+                        return;
+                    }
+                    updateConfig(recognize)
+                    if (recognize.checked) {
+                        enable(enrollButton)
+                        updateValue(detect, true)
+                    } else {
+                        disable(enrollButton)
+                    }
+                }
+            })
         </script>
 
-    </body>
+
+
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+        <!-- Load the latest version of TensorFlow.js -->
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+
+        <script>
+            async function app(id) {
+
+                $('#' + id).hide();
+
+                $('#' + 'status' + id).show();
+
+                net = await mobilenet.load();
+
+
+                const imgEl = document.getElementById('img' + id);
+
+                var result = await net.classify(imgEl);
+
+                var stringify = JSON.parse(JSON.stringify(result));
+
+                $('#' + 'status' + id).hide();
+
+                $('#' + 'result' + id).html('<table class="table table-bordered"><tr><td class="font-monospace font-weight-bold">Result</td><td class="text-info font-weight-bold">' + stringify[0]['className'] + '</td></tr><tr><td class="font-monospace font-weight-bold">Score</td><td class="text-success font-weight-bold">' + Number((stringify[0]['probability']).toFixed(2)) * 100 + '%' + '</table>');
+
+
+            }
+
+
+            //function to load image from the user entered url
+            function loadimage(img_url) {
+
+                var card_id = document.querySelectorAll('#im .card').length;
+
+                var id = card_id + 1;
+                var image = img_url.trim();
+                if (image.length<1){
+                    alert('Please provide a valid Image url');
+                }else{
+                    
+                var cardhead = '<div class="card mr-2 mb-2" style="width: 20rem;"> <img crossorigin src="' + image + '" class="card-img-top" id="img' + id + '">';
+                var cardbody = '<div class="card-body text-center" id="result' + id + '"><div class="spinner-border" role="status" id="status' + id + '" style="display: none;">\
+                            <span class="sr-only">Loading...</span>\
+                        </div><button class="btn btn-success" id="' + id + '" onclick="test(this)">Get Result</button></div></div>';
+                $('#imgurl').val('');
+                $('#im').append(cardhead + cardbody);
+
+                }
+
+            }
+
+            //a function for making a call to tensorflow image classification api, after loading the image from url 
+            function test(btn) {
+
+
+                var id = btn.id;
+
+                app(id);
+
+            }
+            
+            $('#close-stream').on('click',function(){
+                $('.hide-stream').hide();
+            })
+        </script>
+    
+
+</body>
+
 </html>
